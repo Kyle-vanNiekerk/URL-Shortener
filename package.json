@@ -1,0 +1,28 @@
+{
+  "name": "assignmentt-ufzmks",
+  "version": "1.0.0",
+  "description": "URL Shortener built in Node, using Express framework",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "npx mocha test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://instasense-1-jxytrg@git.codesubmit.io/instasense-1/assignmentt-ufzmks"
+  },
+  "author": "Kyle van Niekerk",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
+    "mocha": "^10.2.0"
+  }
+}

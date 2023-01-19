@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--Custom favicon-->
+    <link rel="icon" type="image" href="/src/favicon.png">  
+    <!--External stylesheet-->
+    <link href="/src/style.css" rel="stylesheet" type="text/css">
+    <!--Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">   
+    <title>URL Shortener</title>
+</head>
+
+<body id="website-body">
+    <div class="container" id="container">
+
+        <div id="header">
+            <h1 id="headerP1">URL</h1>
+            <h1 id="headerP2">Shortener</h1>
+        </div>
+
+        <!--User enters an original URL to be encoded in a form-->
+        <form action="/encode", method="post">
+            <h3 id="sub-heading">Encode a full-length URL</h1>
+            <div class="input-group">
+                <input type="url" placeholder="Enter full URL" name="full" id="full" class="form-control col" required="true">
+                <button type="submit" class="btn btn-primary">Shorten URL</button>
+            </div>
+        </form>
+
+        <br>
+        <!--User enters a previously shortened URL to be encoded in a form-->
+        <form action="/decode" method="post">
+            <h3 id="sub-heading">Decode a shortened URL</h1>
+            <div class="input-group">
+                <input type="url" placeholder="Enter shortened URL" name="short" id="short" class="form-control" required="true">
+                <button type="submit" class="btn btn-primary">Get full URL</button>
+            </div>
+        </form>
+
+        <!--Displays all encoded URLs paired with their respective decoded (original) URLs that are present in memory-->
+        <% var count = urlList.length %> 
+        <% if(count > 0){ %>
+            <table id="urlTable" class="table table-striped">
+                <thead >
+                    <tr>
+                        <th>Original URL</th>
+                        <th>Shortened URL</th>
+                    </tr>
+                </thead>
+                <tbody >
+                    <%  urlList.forEach(url => { %>
+                        <% let long = url.fullUrl %> 
+                        <% let short = url.shortUrl %> 
+                        <tr>
+                            <td> <a href="<%= long %>"><%= long %></a> </td>
+                            <td> <a href="<%= short %>"><%= short %></a> </td>
+                        </tr>
+                    <%  });%>   
+                </tbody>          
+            </table>
+
+        <% } %>
+    </div>
+
+</body>
+</html>

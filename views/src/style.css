@@ -1,0 +1,39 @@
+#website-body{
+    background-color: #31485e;
+    background-image: url('/src/bg.jpg');
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+
+#header{
+    text-align: center;
+    padding-bottom: 20px;
+}
+#headerP1{
+    color: rgb(127, 158, 211);
+    display: inline;
+}
+#headerP2{
+    color: azure;
+    display: inline;
+}
+
+#sub-heading{
+    color: azure;
+}
+
+#container{
+    display: inline-block;
+    position: fixed;
+    top: 3%;
+    margin-left: 35%;  
+    width: 500px;
+}
+
+.table {
+    background-color: azure;
+    border-radius: 15px;
+    margin-top: 50%;
+}
