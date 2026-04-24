@@ -1,90 +1,65 @@
+
 const express = require('express');
-const bodyparser = require('body-parser');
 const urlData = require('./models/urlData.js');
 require('dotenv').config();
-const URL = require('url').URL;
+const { URL } = require('url');
 
-//Global variable:
-var urlList = []; //A list which will hold all URL data in memory
+// In-memory URL list
+let urlList = [];
 
 const app = express();
-
-//Gets specified port from .env or uses a default port if
 const port = process.env.PORT || 3000;
+
+app.set('view engine', 'ejs');
+app.use(express.static(__dirname + '/views'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 app.listen(port, () => {
     console.log(`App listening on port ${port}`);
-    console.log(`To access the frontend UI, open http://localhost:${port}/ in yor browser`);
+    console.log(`To access the frontend UI, open http://localhost:${port}/ in your browser`);
 });
 
-app.set('view engine', 'ejs')
-app.use(express.static(__dirname + '/views'));
-app.use(express.urlencoded({extended: false}));
-app.use(bodyparser.urlencoded({extended: true}));
-
-//Validate whether an input is a valid URL
-function urlCheck(myURL) {  //takes too long, causes timeout during testing
+// Validate whether an input is a valid URL
+function urlCheck(myURL) {
     try {
-      new URL(myURL);
-      return true;
+        new URL(myURL);
+        return true;
     } catch (err) {
-      return false;
+        return false;
     }
-};
+}
 
-//Landing Page
+// Landing Page
 app.get('/', (req, res) => {
-    res.render('index.ejs', {urlList:urlList});
-    //res.status(201).send({urlList:urlList});
+    res.render('index.ejs', { urlList });
 });
 
-//Encode a URL, adds it to a list containing both encoded and decoded versions of it
-app.post('/encode', async (req, res) => {
-    const long = await new urlData(req.body.full, port, urlList);
-
- /*   if(urlCheck(long))
-    {
-*/
-        urlList.push(long);
-
-        res.status(201).send({
-            'Shortened URL': long.shortUrl
-        });
-    
-        let counter = urlList.length;
-        console.log(`Encoded URL ${counter}: (${long.fullUrl}) --> (${long.shortUrl})`); //Feedback for server terminal, url successfully encoded and stored in memory
-/*    }
-    else
-    console.log(`${long} is not a valid URL`);
-*/
-
-
+// Encode a URL
+app.post('/encode', (req, res) => {
+    const { full } = req.body;
+    if (!full || !urlCheck(full)) {
+        return res.status(400).json({ error: 'Invalid or missing URL.' });
+    }
+    const long = new urlData(full, port, urlList);
+    urlList.push(long);
+    console.log(`Encoded URL ${urlList.length}: (${long.fullUrl}) --> (${long.shortUrl})`);
+    return res.status(201).json({ 'Shortened URL': long.shortUrl });
 });
 
-//Find the original URL using the encoded version of it
-app.post('/decode', async (req, res) => {
-    let found = '';
-    let counter = 0;
-    let short = await req.body.short;
 
-    urlList.forEach(url => {
-        counter++;
-        if(url.shortUrl == short)
-        {
-            found = url.fullUrl;
-            console.log(`Decoded URL ${counter}: (${short}) --> (${url.fullUrl})`); //Feedback for server terminal encoded url found and successfully decoded
-
-            res.status(201).send({
-                'Original URL': url.fullUrl
-            });
-        }
-    });
-
-    if(found == '')
-    {
-        res.status(404).send({
-            'Original URL': '404 not found'
-        })
-        console.log(`URL: (${short}) is not stored in memory`); //Feedback for server terminal, no matching encoded exists
+// Decode a URL
+app.post('/decode', (req, res) => {
+    const { short } = req.body;
+    if (!short) {
+        return res.status(400).json({ error: 'Missing shortened URL.' });
+    }
+    const found = urlList.find(url => url.shortUrl === short);
+    if (found) {
+        console.log(`Decoded URL: (${short}) --> (${found.fullUrl})`);
+        return res.status(200).json({ 'Original URL': found.fullUrl });
+    } else {
+        return res.status(404).json({ error: 'Shortened URL not found.' });
     }
 });
 
@@ -104,4 +79,15 @@ app.get('/:urlData', async (req, res) => {
         {
             return res.sendStatus(404);
         }
+});
+
+// Redirect short URL to original URL
+app.get('/:urlData', (req, res) => {
+    const snippet = req.params.urlData;
+    const found = urlList.find(url => url.shortUrl.split('/').pop() === snippet);
+    if (found) {
+        return res.redirect(found.fullUrl);
+    } else {
+        return res.status(404).send('Shortened URL not found');
+    }
 });

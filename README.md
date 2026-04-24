@@ -1,4 +1,16 @@
-# Instructions:
+# URL Shortener
+
+A simple Node.js REST API and web UI for shortening URLs. Demonstrates REST API design, Express.js, and basic frontend integration.
+
+## Features
+- Shorten (encode) any valid URL to a short link
+- Decode a short link back to the original URL
+- Simple web interface (EJS + Bootstrap)
+- In-memory storage (no database required)
+- REST API for programmatic access
+
+## Getting Started
+
 ## Step 1: Install Node.js dependencies
 Open the project folder and run the command 
 ```js
@@ -11,53 +23,96 @@ The app can be started through any terminal run inside the project folder (where
 ```js
 npm start
 ``` 
+
 You should then be met with a confirmation that the app has started along with which port it is listening on as well as a link which can be used to access the frontend UI, http://localhost:3000/  by default.
-For example:<br>
-![App listening on port 3000](/views/src/sc1-start.png "Running the 'npm start' command")<br>
-To access the frontend UI, open the link in yor browser
+To access the frontend UI, open the link in your browser.
 
 ## Step 3: Using the frontend UI
-After opening the given link in your browser (http://localhost:3000/ by default) you will be sent to the app's frontend GUI page:<br>
-![The GUI, where a url can be encoded or decoded](/views/src/sc2-ui.png "The GUI page")<br>
+
+After opening the given link in your browser (http://localhost:3000/ by default) you will be sent to the app's frontend GUI page.
 
 ### Encoding a URL:
-Any URL can simply be entered in the "Encode a full-length URL" field, this input box will only accept a valid URL, not null or string values in other formats, this is validated when clicking the respective submit buttons next to each input field, for example:<br>
-![Entering a URL to be encoded](/views/src/sc3-encode1.png "Encoding an example URL")<br>
-When the "Shorten URL" submit button is clicked the url will be encoded at the app's /encode endpoint at http://localhost:3000/encode and the resulting encoded url will be returned as a JSON object:<br>
-![Encoded URL](/views/src/sc4-encoded.png "Encoded URL")<br>
-This is also logged in the app's terminal:<br>
-![Terminal confirmation](/views/src/sc5-terminal.png "Terminal shows URL data")<br>
-This shows how many URLs have been encoded and displays both the original and encoded versions as they are stored in memory.
-The original website can now be accessed through the encoded URL as well as the original through your browser.<br>
-For convenience and better visualization, every URL as well as its encoded version is displaid in the GUI frontend in a table after at least one URL has been successfully encoded as hyperlinks, allowing the user to see end test the results for themselves, both encoded and original URLs will take the user to the website of the original full-length URL. This table will grow with every new encoded url automatically.<br>
-![Entering a URL to be decoded](/views/src/sc9-table.png "Encoded URL")<br>
+
+Any URL can simply be entered in the "Encode a full-length URL" field. This input box will only accept a valid URL, not null or string values in other formats. This is validated when clicking the respective submit buttons next to each input field. When the "Shorten URL" submit button is clicked, the URL will be encoded at the app's /encode endpoint at http://localhost:3000/encode and the resulting encoded URL will be returned as a JSON object. This is also logged in the app's terminal. This shows how many URLs have been encoded and displays both the original and encoded versions as they are stored in memory. The original website can now be accessed through the encoded URL as well as the original through your browser. For convenience and better visualization, every URL as well as its encoded version is displayed in the GUI frontend in a table after at least one URL has been successfully encoded as hyperlinks, allowing the user to see and test the results for themselves. Both encoded and original URLs will take the user to the website of the original full-length URL. This table will grow with every new encoded URL automatically.
 
 ### Decoding a URL:
-When returning to the GUI page at http://localhost:3000/ you will now be able to decode the newly encoded url, as it now exits in memory and is associated with it's original full length URL.
-![Entering a URL to be decoded](/views/src/sc6-decode.png "URL to be decoded")<br>
-This will return the original full url as a JSON when the "Get full URL" button is clicked from the /decode endpoint at http://localhost:3000/decode.<br>
-![Decoded URL](/views/src/sc7-decoded.png "Decoded URL")<br>
-This is also accompanied with a confirmation of the successful decoding of the encoded url.<br>
-![Terminal Confirmation](/views/src/sc8-terminal.png "Terminal with URL data")<br>
+
+When returning to the GUI page at http://localhost:3000/ you will now be able to decode the newly encoded URL, as it now exists in memory and is associated with its original full-length URL. This will return the original full URL as a JSON when the "Get full URL" button is clicked from the /decode endpoint at http://localhost:3000/decode. This is also accompanied with a confirmation of the successful decoding of the encoded URL.
 
 # API Testing:
+# API Testing:
 It is important to note that API testing can only take place after an instance of the app is already running.
-## API Test via Postman
-### Testing the /encode endpoint:
-A `POST` request is made to the /encode endpoint containing a full-length URL<br>
-![Postman POST request](/views/src/sc10-pm1.png "Postman POST request")<br>
-This returns the newly encoded version of the given url as a JSON <br>
-![Returned JSON](/views/src/sc10-pm2.png "Returned encoded JSON")<br>
-### Testing the /decode endpoint:
-A `POST` request is made to the /decode endpoint containing an encoded URL<br>
-![Postman POST request](/views/src/sc11-pm1.png "Postman POST request")<br>
-This returns the decoded original version of the given url as a JSON <br>
-![Returned JSON](/views/src/sc11-pm2.png "Returned decoded JSON")<br>
 
-A `POST` request is made to the /decode endpoint containing an invalid URL, this should return a 404 status along with a JSON object containing an error message<br>
-![Postman POST request](/views/src/sc12-pm1.png "Postman POST request")<br>
-This returns a 404 status along with a JSON object containing an error message <br>
-![Returned JSON](/views/src/sc12-pm2.png "Returned decoded JSON")<br>
+## API Usage and Examples
+
+The API exposes two main endpoints for encoding and decoding URLs. You can interact with these endpoints using tools like [Postman](https://www.postman.com/) or `curl`.
+
+### 1. Encode a URL
+
+**Endpoint:** `POST /encode`
+
+**Body (x-www-form-urlencoded):**
+```
+full=https://example.com
+```
+
+**Example using Postman:**
+1. Set method to `POST` and URL to `http://localhost:3000/encode`
+2. In the Body tab, select `x-www-form-urlencoded`
+3. Add a key `full` with value `https://example.com`
+4. Click Send
+
+**Response:**
+```
+{
+	"Shortened URL": "http://localhost:3000/abc123"
+}
+```
+
+### 2. Decode a Shortened URL
+
+**Endpoint:** `POST /decode`
+
+**Body (x-www-form-urlencoded):**
+```
+short=http://localhost:3000/abc123
+```
+
+**Example using Postman:**
+1. Set method to `POST` and URL to `http://localhost:3000/decode`
+2. In the Body tab, select `x-www-form-urlencoded`
+3. Add a key `short` with the shortened URL you received earlier
+4. Click Send
+
+**Response:**
+```
+{
+	"Original URL": "https://example.com"
+}
+```
+
+### 3. Error Handling Example
+
+If you try to decode a URL that does not exist, you will get a 404 response:
+```
+{
+	"error": "Shortened URL not found."
+}
+```
+
+---
+
+You can also use `curl` for quick testing:
+
+**Encode:**
+```
+curl -X POST -d "full=https://example.com" http://localhost:3000/encode
+```
+
+**Decode:**
+```
+curl -X POST -d "short=http://localhost:3000/abc123" http://localhost:3000/decode
+```
 
 ## API Test via Mocha
 An automated version of the above tests can also be run through the terminal using Mocha, this can be done by running the following command in the main project file where app.js is located:
