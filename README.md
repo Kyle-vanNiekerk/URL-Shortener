@@ -41,7 +41,7 @@ When returning to the GUI page at http://localhost:3000/ you will now be able to
 
 # API Testing:
 # API Testing:
-It is important to note that API testing can only take place after an instance of the app is already running.
+Automated API tests run directly against the Express app in-process, so you do not need to start the app separately.
 
 ## API Usage and Examples
 
@@ -114,14 +114,12 @@ curl -X POST -d "full=https://example.com" http://localhost:3000/encode
 curl -X POST -d "short=http://localhost:3000/abc123" http://localhost:3000/decode
 ```
 
-## API Test via Mocha
-An automated version of the above tests can also be run through the terminal using Mocha, this can be done by running the following command in the main project file where app.js is located:
+## API Test
+An automated version of the above tests can be run through the terminal by using the following command in the main project folder where app.js is located:
 ```js
 npm test
 ```
-This will return the following results in the terminal:<br>
-![Mocha API test results](/views/src/sc13-mocha.png "Mocha API test results")<br>
-This tests the result status (201 if everything is returned correctly, 404 if a request for an invalid URL is made), verifies that valid JSON objects are returned from both /encode and /decode endpoints and that they contain the correct URL information, such as the correct shortened or full-length URL
+This runs the Node.js test runner and validates success and error behavior across /encode, /decode, and short-link redirect routes.
 
 ## Test Case:
 | Test Case ID | Description                                                                                                             | Test Data                                    | Expected Result                                        | Actual Result                                          | Pass/Fail |

@@ -1,89 +1,100 @@
-const chai = require('chai');
-const chaiHttp = require('chai-http');
-const urlData = require('./models/urlData');
-var bodyParser = require('body-parser');
-var express = require('express');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const request = require('supertest');
 
-chai.should();
-chai.use(chaiHttp);
-var app = express();
+const { app, __testing } = require('./app');
 
-app.use(bodyParser.urlencoded({ extended: false }));
-
-let urlObject = new urlData('https://codesubmit.io/library/react',3000);
-
-describe('API Tests:', () => {
-
-    try {
-        //Test POST /encode route, encodes a full-length original url
-        describe('POST /encode with a valid full-length url', async () => { 
-            await it('endpoint /encode returns a encoded url as valid JSON', async () => {
-                res = await chai.request('http://localhost:3000')
-                    .post('/encode')
-                    .type('body')
-                    .set('Content-Type', 'application/x-www-form-urlencoded')
-                    //.send({full:'https://codesubmit.io/library/react'})
-                    .send({full:urlObject.fullUrl})
-
-                res.should.have.status(201); //Check if the app is running
-                res.should.be.json; //Check if the response is json
-
-                res.body.should.have.property('Shortened URL'); //Check if the result json contains the encoded url
-                //urlObject.shortUrl = res.body.shortUrl; //Sets the short url for testing to be the one assigned in memory
-                await setShort(res.body.shortUrl);
-            });
-        });
-
-    } catch (error) {
-        console.log(error);
-    }
-
-    try {
-        //Test POST /decode route, decodes a encoded shortened url
-        describe('POST /decode with a valid encoded', async () => {
-                await urlObject.shortUrl;
-                await it('endpoint /decode returns a decoded url as valid JSON', async () => {
-                    let res = await chai.request('http://localhost:3000')
-                        .post('/decode')  
-                        .type('body')
-                        .set('Content-Type', 'application/x-www-form-urlencoded')
-                        .send({short:urlObject.shortUrl}) //This has to be set in runtime since encoded urls are stored in memory, not a database
-                    if(await urlObject.shortUrl != undefined)
-                    {
-                        //res.should.have.status(201); //Check if the app is running
-                        res.should.be.json ; //Check if the response is json
-                        res.body.should.have.property('Original URL'); //Check if the result json contains the decoded url 
-                    }
-                });
-            
-        });    
-
-    } catch (error) {
-        console.log(error);
-    }
-
-    try {
-        //Test POST /decode route, if an invalid url is requested that is not stored in memory
-        describe('POST /decode with an invalid url', () => {
-            it('endpoint /decode can handle being sent an invalid url to be decoded', async () => {
-                let res = await chai.request('http://localhost:3000')
-                    .post('/decode')  
-                    .type('form')
-                    .set('Content-Type', 'application/x-www-form-urlencoded')
-                    .send({"short":"http://localhost:3000/*INVALID_URL*"})
-    
-                res.should.have.status(404); //Check if the app is running
-                res.should.be.json ; //Check if the response is json
-            });
-        });    
-    } catch (error) {
-        console.log(error); 
-    }
+test.beforeEach(() => {
+    __testing.resetUrlList();
 });
 
-function getShort() {
-    return res.body.shortUrl;
-  } 
-function setShort(iShort){
-    urlObject.shortUrl = iShort;
-}
+test('POST /encode returns shortened URL for a valid input', async () => {
+    const res = await request(app)
+        .post('/encode')
+        .type('form')
+        .send({ full: 'https://codesubmit.io/library/react' });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.type, 'application/json');
+    assert.ok(res.body['Shortened URL']);
+    assert.match(res.body['Shortened URL'], /^http:\/\/localhost:\d+\/[A-Za-z0-9_]{6}$/);
+});
+
+test('POST /encode rejects missing or invalid URL', async () => {
+    const missing = await request(app)
+        .post('/encode')
+        .type('form')
+        .send({});
+
+    assert.equal(missing.status, 400);
+    assert.equal(missing.body.error, 'Invalid or missing URL.');
+
+    const invalid = await request(app)
+        .post('/encode')
+        .type('form')
+        .send({ full: 'not-a-url' });
+
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.error, 'Invalid or missing URL.');
+});
+
+test('POST /decode returns original URL for a known short URL', async () => {
+    const encoded = await request(app)
+        .post('/encode')
+        .type('form')
+        .send({ full: 'https://codesubmit.io/library/react' });
+
+    const shortUrl = encoded.body['Shortened URL'];
+
+    const decoded = await request(app)
+        .post('/decode')
+        .type('form')
+        .send({ short: shortUrl });
+
+    assert.equal(decoded.status, 200);
+    assert.equal(decoded.type, 'application/json');
+    assert.equal(decoded.body['Original URL'], 'https://codesubmit.io/library/react');
+});
+
+test('POST /decode handles missing and unknown short URL', async () => {
+    const missing = await request(app)
+        .post('/decode')
+        .type('form')
+        .send({});
+
+    assert.equal(missing.status, 400);
+    assert.equal(missing.body.error, 'Missing shortened URL.');
+
+    const unknown = await request(app)
+        .post('/decode')
+        .type('form')
+        .send({ short: 'http://localhost:3000/UNKNOWN1' });
+
+    assert.equal(unknown.status, 404);
+    assert.equal(unknown.body.error, 'Shortened URL not found.');
+});
+
+test('GET /:snippet redirects to original URL for known snippet', async () => {
+    const encoded = await request(app)
+        .post('/encode')
+        .type('form')
+        .send({ full: 'https://example.com' });
+
+    const shortUrl = encoded.body['Shortened URL'];
+    const snippet = new URL(shortUrl).pathname.slice(1);
+
+    const redirect = await request(app)
+        .get(`/${snippet}`)
+        .redirects(0);
+
+    assert.equal(redirect.status, 302);
+    assert.equal(redirect.headers.location, 'https://example.com');
+});
+
+test('GET /:snippet returns 404 for unknown snippet', async () => {
+    const res = await request(app)
+        .get('/missing1');
+
+    assert.equal(res.status, 404);
+    assert.match(res.text, /Shortened URL not found/i);
+});

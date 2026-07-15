@@ -15,10 +15,12 @@ app.use(express.static(__dirname + '/views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.listen(port, () => {
-    console.log(`App listening on port ${port}`);
-    console.log(`To access the frontend UI, open http://localhost:${port}/ in your browser`);
-});
+function startServer(listenPort = port) {
+    return app.listen(listenPort, () => {
+        console.log(`App listening on port ${listenPort}`);
+        console.log(`To access the frontend UI, open http://localhost:${listenPort}/ in your browser`);
+    });
+}
 
 // Validate whether an input is a valid URL
 function urlCheck(myURL) {
@@ -37,13 +39,18 @@ app.get('/', (req, res) => {
 
 // Encode a URL
 app.post('/encode', (req, res) => {
-    const { full } = req.body;
+    const { full, fromUi } = req.body;
     if (!full || !urlCheck(full)) {
         return res.status(400).json({ error: 'Invalid or missing URL.' });
     }
     const long = new urlData(full, port, urlList);
     urlList.push(long);
     console.log(`Encoded URL ${urlList.length}: (${long.fullUrl}) --> (${long.shortUrl})`);
+
+    if (fromUi === '1') {
+        return res.redirect('/');
+    }
+
     return res.status(201).json({ 'Shortened URL': long.shortUrl });
 });
 
@@ -63,24 +70,6 @@ app.post('/decode', (req, res) => {
     }
 });
 
-//Use the shortened URL to actually reach the original URL
-app.get('/:urlData', async (req, res) => {
-    let snippet = await req.url.split("/").pop();
-    let found =false;
-        urlList.forEach(url => {
-            if(url.shortUrl.split("/").pop() == snippet)
-            {
-                res.redirect(url.fullUrl);
-                found = true;
-            }
-        });
-    
-        if(found == false)
-        {
-            return res.sendStatus(404);
-        }
-});
-
 // Redirect short URL to original URL
 app.get('/:urlData', (req, res) => {
     const snippet = req.params.urlData;
@@ -91,3 +80,17 @@ app.get('/:urlData', (req, res) => {
         return res.status(404).send('Shortened URL not found');
     }
 });
+
+module.exports = {
+    app,
+    startServer,
+    __testing: {
+        resetUrlList: () => {
+            urlList = [];
+        }
+    }
+};
+
+if (require.main === module) {
+    startServer();
+}

@@ -23,10 +23,11 @@
         </div>
 
         <!--User enters an original URL to be encoded in a form-->
-        <form action="/encode", method="post">
+        <form action="/encode" method="post">
             <h3 id="sub-heading">Encode a full-length URL</h1>
             <div class="input-group">
                 <input type="url" placeholder="Enter full URL" name="full" id="full" class="form-control col" required="true">
+                <input type="hidden" name="fromUi" value="1">
                 <button type="submit" class="btn btn-primary">Shorten URL</button>
             </div>
         </form>
